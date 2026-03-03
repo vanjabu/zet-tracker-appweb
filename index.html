@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -481,10 +480,7 @@ async function handleLogout() {
 // ═══════════════════════════════════════════════
 // MAP
 // ═══════════════════════════════════════════════
-const map = L.map('map', {zoomControl:false}).setView([45.815, 15.982], 13);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19}).addTo(map);
-L.control.zoom({position:'topright'}).addTo(map);
-
+let map;
 const vehicleMarkers = {};
 let userMarker = null;
 let selectedVehicleId = null;
@@ -863,6 +859,9 @@ function showToast(msg) {
 // ═══════════════════════════════════════════════
 async function init() {
   applyTranslations();
+  map = L.map('map', {zoomControl:false}).setView([45.815, 15.982], 13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19}).addTo(map);
+  L.control.zoom({position:'topright'}).addTo(map);
   showToast('📡 Učitavam ZET podatke...');
   const ok = await fetchVehicles();
   if (ok) showToast(`✓ ${allVehicles.length} vozila učitano uživo`);
@@ -874,7 +873,10 @@ async function init() {
   }, 30000);
 }
 
-window.addEventListener('load', init);
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  window.addEventListener('load', init);
 </script>
 </body>
 </html>
