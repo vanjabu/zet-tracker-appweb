@@ -874,7 +874,7 @@ async function init() {
   }, 30000);
 }
 
-window.addEventListener('load', init);
+if (document.readyState === 'complete') {   setTimeout(init, 100); } else {   window.addEventListener('load', () => setTimeout(init, 100)); }
 </script>
 </body>
 </html>
