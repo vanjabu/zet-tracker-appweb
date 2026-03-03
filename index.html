@@ -480,9 +480,7 @@ async function handleLogout() {
 // ═══════════════════════════════════════════════
 // MAP
 // ═══════════════════════════════════════════════
-const map = L.map('map', {zoomControl:false}).setView([45.815, 15.982], 13);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19}).addTo(map);
-L.control.zoom({position:'topright'}).addTo(map);
+let map;
 
 const vehicleMarkers = {};
 let userMarker = null;
@@ -860,13 +858,16 @@ function showToast(msg) {
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
-async function init() {
+
+  async function init() {
   applyTranslations();
+  map = L.map('map', {zoomControl:false}).setView([45.815, 15.982], 13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19}).addTo(map);
+  L.control.zoom({position:'topright'}).addTo(map);
   showToast('📡 Učitavam ZET podatke...');
   const ok = await fetchVehicles();
   if (ok) showToast(`✓ ${allVehicles.length} vozila učitano uživo`);
   else showToast('⚠️ Privremeno nedostupno');
-
   setInterval(async () => {
     await fetchVehicles();
     if (currentRoute) updateUrgency();
