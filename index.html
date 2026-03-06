@@ -570,7 +570,7 @@ async function fetchVehicles() {
       .filter(v => v.lat && v.lng)
       .map(v => {
         const info = getRouteInfo(v.routeId);
-        return { id:v.id, type:info.type, line:v.routeId||'?', from:info.from, to:info.to, lat:v.lat, lng:v.lng, bearing:v.bearing||0, speed:v.speed||0 };
+        return { id:v.id, type:info.type, line:v.routeId||'?', from:info.from, to:info.to, lat:v.lat, lng:v.lng, bearing:v.bearing||0, speed:v.speed||0, nearStop:v.nearStop||null };
       });
 
     // Update markers
@@ -599,6 +599,8 @@ async function fetchVehicles() {
 // ═══════════════════════════════════════════════
 // VEHICLE SELECTION & DETAIL
 // ═══════════════════════════════════════════════
+let routeLayer = null;
+
 function selectVehicle(id) {
   selectedVehicleId = id;
   const v = allVehicles.find(x => x.id === id);
@@ -610,11 +612,26 @@ function selectVehicle(id) {
   });
 
   // Focus on map
-  map.setView([v.lat, v.lng], 16);
+  map.setView([v.lat, v.lng], 14);
+
+  // Draw route on map
+  if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+  if (v.line && v.line !== '?') {
+    fetch(`${PROXY_URL}/route/${v.line}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.points && data.points.length > 0) {
+          const color = v.type === 'tram' ? '#1a3faa' : '#2a9d5c';
+          routeLayer = L.polyline(data.points, {
+            color, weight: 4, opacity: 0.7, smoothFactor: 1
+          }).addTo(map);
+        }
+      })
+      .catch(() => {});
+  }
 
   // Show detail panel
   const detail = document.getElementById('vehicleDetail');
-  const speedKmh = v.speed || 0;
   detail.style.display = 'block';
   detail.innerHTML = `
     <div class="vehicle-detail">
@@ -627,12 +644,12 @@ function selectVehicle(id) {
       </div>
       <div class="detail-stats">
         <div class="stat-box">
-          <div class="stat-val">${speedKmh}</div>
+          <div class="stat-val">${v.speed || 0}</div>
           <div class="stat-lbl">km/h</div>
         </div>
         <div class="stat-box">
-          <div class="stat-val">${v.bearing}°</div>
-          <div class="stat-lbl">smjer</div>
+          <div class="stat-val" style="font-size:10px;color:var(--text2)">${v.nearStop ? v.nearStop.substring(0,10) : '—'}</div>
+          <div class="stat-lbl">stanica</div>
         </div>
         <div class="stat-box">
           <div class="stat-val" style="color:var(--green);font-size:13px">✓</div>
@@ -643,16 +660,14 @@ function selectVehicle(id) {
     </div>`;
 
   switchTab('live');
-
-  // Scroll to top of list
   document.querySelector('.panel-content').scrollTop = 0;
-
   renderVehicleList();
 }
 
 function clearSelection() {
   selectedVehicleId = null;
   document.getElementById('vehicleDetail').style.display = 'none';
+  if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
   allVehicles.forEach(v => {
     if (vehicleMarkers[v.id]) vehicleMarkers[v.id].setIcon(makeIcon(v.type, v.line, false));
   });
